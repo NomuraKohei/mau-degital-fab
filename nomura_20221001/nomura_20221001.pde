@@ -10,6 +10,7 @@ Movie myMovie;
 import ddf.minim.*;
 Minim minim;
 AudioPlayer player;
+AudioPlayer bgm;
 
 // 利用する変数の初期化
 float nowRole = 0;
@@ -18,11 +19,14 @@ float cuttedTime = 0.0;
 float rollCounter = 0.0;
 int pausingMiliSeconds = 0;
 float reverseTime = 0;
+float myGain;
+float nowGain;
 Boolean isRevese = false;
 Boolean isPlay20cm = false;
 Boolean isPlay70cm = false;
 Boolean isPlay80cm = false;
 Boolean isPlay90cm = false;
+Boolean breakFlg = false;
  
  void setup() {
    fullScreen(2);
@@ -35,6 +39,10 @@ Boolean isPlay90cm = false;
    // 音声の準備
    minim = new Minim(this);
    player = minim.loadFile("./data/sounds/20cm.mp3");
+   bgm = minim.loadFile("./data/sounds/VSQSE_1042_old_growth_forest_02.mp3");
+   bgm.play();
+   bgm.loop();
+   //bgm.setGain( 0.1 );
    // 背景の補完
    background(31,31,36);
  }
@@ -57,12 +65,12 @@ Boolean isPlay90cm = false;
        myMovie.pause();
        
        // sound判定
-       if(nowRole > 200 && isPlay20cm == false){
+       if(nowRole > 400 && isPlay20cm == false){
          player = minim.loadFile("./data/sounds/20cm.mp3");
          player.play();
          player.rewind();
          isPlay20cm = true;
-       } else if(nowRole > 700 && isPlay70cm == false){
+       } else if(nowRole > 600 && isPlay70cm == false){
          player = minim.loadFile("./data/sounds/70cm.mp3");
          player.play();
          player.rewind();
@@ -72,7 +80,7 @@ Boolean isPlay90cm = false;
          player.play();
          player.rewind();
          isPlay80cm = true;
-       } else if(nowRole > 900 && isPlay90cm == false){
+       } else if(nowRole > 1000 && isPlay90cm == false){
          player = minim.loadFile("./data/sounds/90cm.mp3");
          player.play();
          player.rewind();
@@ -97,11 +105,34 @@ void draw() {
     // 動画の時間が変化がないときは、pausingMiliSecondsを+1する
     if(currentTime == myMovie.time()){
       pausingMiliSeconds = pausingMiliSeconds + 1;
+      
     } else {
       currentTime = myMovie.time();
       pausingMiliSeconds = 0;
     }
  }
+ 
+ myGain = bgm.getGain();
+ if(pausingMiliSeconds > 0.0){
+   if(myGain > -11.0){
+     bgm.setGain( myGain - 0.4 );
+     println("lowGain");
+   } else {
+     bgm.setGain( -12.0 );
+     println("maxLowGain");
+   }
+ } else {
+   if(myGain > -0.1){
+     println("zeroGain");
+     bgm.setGain( 0.0 );
+   } else {
+     println("increaseGain");
+     bgm.setGain( myGain + 0.4 );
+   }
+ }
+ 
+ nowGain = bgm.getGain();
+ println(nowGain);
  
  // 待機時間が150を超えた時、逆再生フラグを建てる
  println(pausingMiliSeconds);
@@ -133,10 +164,11 @@ void draw() {
  
  // 画面幅に応じて拡大・縮小
  scale( float(width) / float(myMovie.width) * 0.81 );
- translate(130, 110);
+ translate(170, 110);
  
  // 動画の表示
  image(myMovie, 0, 0);
+ 
 }
  
 void movieEvent(Movie m) {
